@@ -60,6 +60,32 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 }
 #fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
 
+/* ---------- ฉากหลังเคลื่อนไหว ----------
+   สามชั้นซ้อนกัน หมุน เลื่อน และลอยขึ้น คนละความเร็ว
+   ใช้ transform ล้วน การ์ดจอถูๆ ก็วิ่งไหว                */
+.bg{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  transition:opacity .6s var(--ease)}
+.stage.playing .bg{opacity:.4}
+.bg .rays{position:absolute;left:-62%;top:-46%;width:224%;aspect-ratio:1;
+  background:repeating-conic-gradient(from 0deg,
+    rgba(255,122,24,.075) 0deg 7deg, transparent 7deg 16deg);
+  animation:spin 96s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bg .stripes{position:absolute;inset:-40%;
+  background:repeating-linear-gradient(-24deg,
+    rgba(255,164,61,.11) 0 calc(var(--u)*3.2), transparent calc(var(--u)*3.2) calc(var(--u)*10));
+  animation:slide 24s linear infinite}
+@keyframes slide{to{transform:translate(calc(var(--u)*-10.9), calc(var(--u)*24.4))}}
+.bg i{position:absolute;display:block;border-radius:50%;bottom:-14%;
+  background:radial-gradient(circle at 34% 30%, #FFF0C4, #F5C542 46%, #D89B10);
+  opacity:0;animation:rise linear infinite}
+@keyframes rise{
+  0%{transform:translateY(0) rotate(0deg) scale(.9);opacity:0}
+  10%{opacity:.2}
+  85%{opacity:.2}
+  100%{transform:translateY(-125vh) rotate(300deg) scale(1.05);opacity:0}
+}
+
 /* ---------- ตัวอักษรการ์ตูนขอบหนา ---------- */
 .toon{
   font-family:var(--f-display);font-weight:700;color:var(--white);
@@ -107,9 +133,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 /* ---------- ปุ่มการ์ตูน ---------- */
 .tbtn{
   position:relative;display:block;width:100%;
-  font-family:var(--f-display);font-weight:700;
+  font-family:var(--f-display);font-weight:700;font-size:calc(var(--u)*4.4);
   border:var(--bw) solid var(--ink);border-radius:calc(var(--u)*4.5);
-  padding:calc(var(--u)*4.2) calc(var(--u)*4);color:var(--white);
+  padding:calc(var(--u)*3.6) calc(var(--u)*4);color:var(--white);
   background:linear-gradient(180deg,var(--o2) 0%,var(--o1) 48%,var(--o3) 100%);
   box-shadow:inset 0 calc(var(--u)*1.3) 0 rgba(255,255,255,.5),
              0 var(--lift) 0 var(--o4), 0 calc(var(--lift) + var(--u)*1.5) calc(var(--u)*3) rgba(74,44,18,.28);
@@ -131,14 +157,14 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
    ================================================================== */
 .buddy{position:relative;width:100%;display:grid;place-items:center}
 .buddy svg{width:100%;height:auto;display:block;overflow:visible}
-.buddy .body{animation:bob 1.5s var(--ease) infinite}
+.buddy .body{animation:bob calc(1.5s * var(--sp,1)) var(--ease) infinite;animation-delay:var(--dl,0s)}
 .limb{stroke:var(--ink);stroke-width:8;stroke-linecap:round;fill:none}
 .mitt{fill:var(--o1);stroke:var(--ink);stroke-width:6}
 .shoe{fill:var(--ink)}
-.armL{transform-origin:44px 100px;animation:swingA 0.72s var(--ease) infinite alternate}
-.armR{transform-origin:156px 100px;animation:swingB 0.72s var(--ease) infinite alternate}
-.legL{transform-origin:84px 152px;animation:swingB 0.72s var(--ease) infinite alternate}
-.legR{transform-origin:116px 152px;animation:swingA 0.72s var(--ease) infinite alternate}
+.armL{transform-origin:44px 100px;animation:swingA calc(0.72s * var(--sp,1)) var(--ease) infinite alternate;animation-delay:var(--dl,0s)}
+.armR{transform-origin:156px 100px;animation:swingB calc(0.72s * var(--sp,1)) var(--ease) infinite alternate;animation-delay:var(--dl,0s)}
+.legL{transform-origin:84px 152px;animation:swingB calc(0.72s * var(--sp,1)) var(--ease) infinite alternate;animation-delay:var(--dl,0s)}
+.legR{transform-origin:116px 152px;animation:swingA calc(0.72s * var(--sp,1)) var(--ease) infinite alternate;animation-delay:var(--dl,0s)}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-4%) rotate(3deg)}}
 @keyframes swingA{from{transform:rotate(-16deg)}to{transform:rotate(18deg)}}
 @keyframes swingB{from{transform:rotate(18deg)}to{transform:rotate(-16deg)}}
@@ -161,8 +187,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .bubble{
   position:relative;max-width:86%;margin:0 auto calc(var(--u)*1.6);
   background:var(--white);border:var(--bw) solid var(--ink);
-  border-radius:calc(var(--u)*4);padding:calc(var(--u)*2.4) calc(var(--u)*4);
-  font-family:var(--f-display);font-weight:500;font-size:calc(var(--u)*3.6);
+  border-radius:calc(var(--u)*4);padding:calc(var(--u)*1.9) calc(var(--u)*3.4);
+  font-family:var(--f-display);font-weight:500;font-size:calc(var(--u)*3.2);
   text-align:center;line-height:1.4;
   box-shadow:0 calc(var(--u)*1.2) 0 rgba(74,44,18,.2);
   animation:pop .34s var(--bounce);
@@ -176,37 +202,40 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
 /* ---------- หน้าเชิญเล่น ---------- */
 #attract{justify-content:center;text-align:center;gap:calc(var(--u)*1)}
-.title{font-size:calc(var(--u)*11.6);line-height:1.08}
-.tagline{font-size:calc(var(--u)*3.5);color:var(--ink-soft);margin-top:calc(var(--u)*1.6)}
-.buddy.hero{max-width:calc(var(--u)*46);margin:calc(var(--u)*2) auto}
+.title{font-size:calc(var(--u)*10.6);line-height:1.08}
+.tagline{font-size:calc(var(--u)*3.2);color:var(--ink-soft);margin-top:calc(var(--u)*1.2)}
+/* คณะน้องเหรียญสามตัว เต้นไม่พร้อมกัน จะได้ดูมีชีวิต */
+.troupe{display:flex;align-items:flex-end;justify-content:center;
+  gap:calc(var(--u)*1.2);margin:calc(var(--u)*1.4) auto}
+.troupe .buddy{flex:none}
 
 .rights{
   display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*2.6);
-  margin:calc(var(--u)*3) auto calc(var(--u)*3.5);padding:calc(var(--u)*2.6) calc(var(--u)*5);
+  margin:calc(var(--u)*2.2) auto calc(var(--u)*2.6);padding:calc(var(--u)*2.1) calc(var(--u)*4);
   background:var(--gold);border:var(--bw) solid var(--ink);border-radius:calc(var(--u)*3.4);
   box-shadow:0 calc(var(--u)*1.4) 0 #C79A18;
-  font-family:var(--f-display);font-weight:600;font-size:calc(var(--u)*4.4);
+  font-family:var(--f-display);font-weight:600;font-size:calc(var(--u)*3.8);
 }
-.rights em{font-style:normal;font-size:calc(var(--u)*7);line-height:1;color:var(--o3)}
+.rights em{font-style:normal;font-size:calc(var(--u)*5.8);line-height:1;color:var(--o3)}
 
-.rules{list-style:none;display:flex;flex-direction:column;gap:calc(var(--u)*2);
-  width:100%;max-width:calc(var(--u)*84);margin:0 auto calc(var(--u)*4)}
+.rules{list-style:none;display:flex;flex-direction:column;gap:calc(var(--u)*1.6);
+  width:100%;max-width:calc(var(--u)*84);margin:0 auto calc(var(--u)*3)}
 .rules li{
   display:flex;align-items:center;gap:calc(var(--u)*2.8);text-align:left;
-  font-size:calc(var(--u)*3.4);line-height:1.4;
+  font-size:calc(var(--u)*3.1);line-height:1.4;
   background:var(--white);border:calc(var(--u)*.4) solid rgba(74,44,18,.16);
-  border-radius:calc(var(--u)*3);padding:calc(var(--u)*2.2) calc(var(--u)*3);
+  border-radius:calc(var(--u)*3);padding:calc(var(--u)*1.8) calc(var(--u)*2.6);
 }
-.rules li .g{flex:none;width:calc(var(--u)*7);height:calc(var(--u)*7)}
+.rules li .g{flex:none;width:calc(var(--u)*6);height:calc(var(--u)*6)}
 .rules li .g svg,.rules li .g img{width:100%;height:100%;display:block}
-.cta{max-width:calc(var(--u)*82);align-self:center;font-size:calc(var(--u)*5.4);
+.cta{max-width:calc(var(--u)*82);align-self:center;font-size:calc(var(--u)*4.8);
   animation:breathe 2.2s var(--ease) infinite}
 @keyframes breathe{0%,100%{scale:1}50%{scale:1.04}}
 
 /* ---------- หน้าเล่น ---------- */
-#game{gap:calc(var(--u)*2.4)}
-.buddy.mini{max-width:calc(var(--u)*24);margin:0 auto}
-.grid{display:grid;gap:calc(var(--u)*2.6);grid-template-columns:repeat(var(--cols,3),1fr)}
+#game{gap:calc(var(--u)*1.8)}
+.buddy.mini{max-width:calc(var(--u)*16);margin:0 auto}
+.grid{display:grid;gap:calc(var(--u)*2.2);grid-template-columns:repeat(var(--cols,3),1fr)}
 .tile{position:relative;aspect-ratio:1;background:none;perspective:calc(var(--u)*100)}
 .tile::before{content:"";position:absolute;left:0;right:0;top:var(--lift);bottom:calc(var(--lift)*-1);
   background:var(--o4);border:var(--bw) solid var(--ink);border-radius:calc(var(--u)*3.4)}
@@ -236,13 +265,13 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .purse{
   margin-top:auto;display:flex;align-items:center;gap:calc(var(--u)*3);
   background:var(--white);border:var(--bw) solid var(--ink);border-radius:calc(var(--u)*4);
-  padding:calc(var(--u)*2.4) calc(var(--u)*4);
+  padding:calc(var(--u)*2) calc(var(--u)*3.4);
   box-shadow:0 var(--lift) 0 rgba(74,44,18,.24);
 }
-.purse img{width:calc(var(--u)*10);flex:none}
+.purse img{width:calc(var(--u)*8);flex:none}
 .purse .t{flex:1;font-size:calc(var(--u)*3.2);color:var(--ink-soft);line-height:1.3}
 .purse .t b{display:block;font-family:var(--f-display);font-weight:600;font-size:calc(var(--u)*3.8);color:var(--ink)}
-.purse .n{font-family:var(--f-display);font-weight:700;font-size:calc(var(--u)*9.6);line-height:1;color:var(--o1)}
+.purse .n{font-family:var(--f-display);font-weight:700;font-size:calc(var(--u)*7.6);line-height:1;color:var(--o1)}
 .purse .n.bump{animation:bump .42s var(--bounce)}
 @keyframes bump{0%{scale:1}45%{scale:1.34}100%{scale:1}}
 
@@ -342,6 +371,8 @@ input:focus,select:focus{outline:2px solid var(--o1);outline-offset:1px}
 <body>
 <div class="stage" id="stage">
 
+  <div class="bg" id="bg"><span class="rays"></span><span class="stripes"></span></div>
+
   <div class="bar">
     <button class="gear" id="gearBtn" aria-label="ตั้งค่า">⚙</button>
     <div class="tickets" id="tickets"></div>
@@ -353,7 +384,7 @@ input:focus,select:focus{outline:2px solid var(--o1);outline-offset:1px}
     <h1 class="title toon">เปิดปุ๊บ<br><span class="toon o">ลุ้นปั๊บ</span></h1>
     <p class="tagline">เปิดป้ายสะสมเหรียญซีคอนพลัส</p>
     <div class="bubble" id="bubbleA">มาเปิดป้ายกับน้องเหรียญมั้ย</div>
-    <div class="buddy hero" id="buddyA"></div>
+    <div class="troupe" id="troupeA"></div>
     <div class="rights">1 คนเปิดได้ <em id="rightsN">3</em> สิทธิ์</div>
     <ol class="rules" id="rulesList"></ol>
     <button class="tbtn cta" id="startBtn">แตะเพื่อเริ่ม</button>
@@ -633,6 +664,7 @@ function renderGrid(){
 function show(w){
   $("attract").classList.toggle("on", w==="attract");
   $("game").classList.toggle("on", w==="game");
+  $("stage").classList.toggle("playing", w==="game");
 }
 function renderTickets(){
   var h="";
@@ -785,12 +817,12 @@ function toAttract(){
 /* ============ ข้อความกติกา ============ */
 function renderRules(){
   var bombLine = cfg.wipe
-    ? "เจอระเบิด จบสิทธิ์นั้นทันที และเสียเหรียญของสิทธิ์นั้น"
-    : "เจอระเบิด จบสิทธิ์นั้นทันที เหรียญที่เก็บได้ยังเป็นของคุณ";
+    ? "เจอระเบิด จบสิทธิ์นั้น และเสียเหรียญรอบนั้น"
+    : "เจอระเบิด จบสิทธิ์นั้น เหรียญที่เก็บได้ยังเป็นของคุณ";
   $("rulesList").innerHTML =
-    '<li><span class="g">'+SVG_HAND+'</span><span>แตะป้ายเพื่อเปิด เปิดต่อได้เรื่อยๆ ไม่จำกัดจำนวนช่อง</span></li>' +
+    '<li><span class="g">'+SVG_HAND+'</span><span>แตะป้ายเปิดไปเรื่อยๆ ไม่จำกัดช่อง</span></li>' +
     '<li><span class="g">'+SVG_BOMB+'</span><span>'+bombLine+'</span></li>' +
-    '<li><span class="g"><img src="'+COIN+'" alt=""></span><span>กด “พอแล้ว” ตอนไหนก็ได้ แล้วรับเหรียญที่เคาน์เตอร์</span></li>';
+    '<li><span class="g"><img src="'+COIN+'" alt=""></span><span>กดพอแล้วเมื่อไหร่ก็ได้ รับเหรียญที่เคาน์เตอร์</span></li>';
   $("brandTxt").textContent=cfg.brand;
   $("rightsN").textContent=String(cfg.rights);
 }
@@ -878,11 +910,51 @@ document.addEventListener("keydown", function(e){
   document.addEventListener(ev, function(){ if(phase!=="attract") resetIdle(); }, {passive:true});
 });
 
+/* ============ กันเนื้อหาล้นกรอบ ============
+   วัดความสูงจริงของทุกหน้าหลังฟอนต์โหลดเสร็จ
+   ถ้ายังสูงเกินกรอบ ย่อทั้งหน้าลงพอดี ไม่ว่าจอจะกี่นิ้ว     */
+function fitScreen(el){
+  el.style.transform = "none";
+  var cs = getComputedStyle(el);
+  var gap = parseFloat(cs.rowGap) || 0;
+  var kids = el.children, n = kids.length;
+  var total = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + gap*(n-1);
+  for(var i=0;i<n;i++){
+    var m = getComputedStyle(kids[i]);
+    total += kids[i].getBoundingClientRect().height +
+             parseFloat(m.marginTop) + parseFloat(m.marginBottom);
+  }
+  var avail = el.clientHeight;
+  if(total > avail && total > 0){
+    el.style.transformOrigin = "top center";
+    el.style.transform = "scale(" + (avail/total).toFixed(4) + ")";
+  }
+}
+function fitAll(){ [$("attract"), $("game")].forEach(fitScreen); }
+window.addEventListener("resize", fitAll);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+setTimeout(fitAll, 400);
+
 /* ============ เริ่ม ============ */
 $("barCoin").src=COIN; $("purseCoin").src=COIN; $("endCoin").src=COIN;
-$("buddyA").innerHTML=buddySVG(); $("buddyA").dataset.size="hero";
+/* ตัวกลางใหญ่กว่าเพื่อน ตัวข้างเต้นหน่วงกันคนละจังหวะ */
+var TROUPE=[{w:21,dl:".26s",sp:1.14},{w:25,dl:"0s",sp:1},{w:21,dl:".5s",sp:.9}];
+$("troupeA").innerHTML = TROUPE.map(function(t){
+  return '<div class="buddy" style="width:calc(var(--u)*'+t.w+');--dl:'+t.dl+';--sp:'+t.sp+'">'+buddySVG()+'</div>';
+}).join("");
+/* เหรียญลอยขึ้นเป็นฉากหลัง */
+(function(){
+  var html="", n=9;
+  for(var i=0;i<n;i++){
+    var sz = 5 + (i*2.7)%9;
+    html += '<i style="left:'+((i*11+4)%94)+'%;width:calc(var(--u)*'+sz.toFixed(1)+
+            ');height:calc(var(--u)*'+sz.toFixed(1)+');animation-duration:'+(16+(i*3)%11)+
+            's;animation-delay:-'+(i*2.4).toFixed(1)+'s"></i>';
+  }
+  $("bg").insertAdjacentHTML("beforeend", html);
+})();
 $("buddyG").innerHTML=buddySVG(); $("buddyG").dataset.size="mini"; mood($("buddyG"),"watch");
-sizeCanvas(); renderRules(); renderTickets();
+sizeCanvas(); renderRules(); renderTickets(); fitAll();
 setInterval(function(){ if(phase==="attract") say($("bubbleA"),"idle"); }, 6000);
 show("attract");
 })();
