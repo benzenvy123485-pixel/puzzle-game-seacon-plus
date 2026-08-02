@@ -305,6 +305,32 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 @keyframes shake{10%,90%{transform:translate3d(calc(var(--u)*-1.6),0,0)}20%,80%{transform:translate3d(calc(var(--u)*3),0,0)}
   30%,50%,70%{transform:translate3d(calc(var(--u)*-4),calc(var(--u)*1.2),0)}40%,60%{transform:translate3d(calc(var(--u)*4),calc(var(--u)*-1.2),0)}}
 
+/* ---------- ป้ายเฉลย ----------
+   ขึ้นระหว่างที่ป้ายกำลังพลิกเปิด ก่อนแผงสรุปจะเด้ง
+   ให้ลูกค้าเห็นชัดๆ ว่าเหรียญซ่อนอยู่ตรงไหน                */
+.answer{
+  position:absolute;left:50%;top:calc(var(--u)*15);transform:translate(-50%,calc(var(--u)*-3));
+  z-index:58;opacity:0;pointer-events:none;transition:.35s var(--bounce);
+  background:var(--white);border:var(--bw) solid var(--ink);border-radius:calc(var(--u)*3.4);
+  padding:calc(var(--u)*2) calc(var(--u)*4.4);white-space:nowrap;
+  font-family:var(--f-display);font-weight:600;font-size:calc(var(--u)*4);
+  box-shadow:0 calc(var(--u)*1.4) 0 rgba(74,44,18,.24);
+}
+.answer.on{opacity:1;transform:translate(-50%,0)}
+
+/* วงกลมชี้ช่องที่มีเหรียญ วาดทับป้ายตอนเฉลย */
+.tile .ring{
+  position:absolute;inset:calc(var(--u)*-.8);z-index:3;border-radius:calc(var(--u)*4);
+  border:calc(var(--u)*.9) solid var(--gold);opacity:0;pointer-events:none;
+  box-shadow:0 0 calc(var(--u)*3) rgba(245,197,66,.9);
+}
+.tile.point .ring{animation:ping .9s var(--ease) 2}
+@keyframes ping{
+  0%{opacity:0;transform:scale(1.22)}
+  35%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.04)}
+}
+
 /* ---------- แผงสรุป ---------- */
 .endsheet{
   position:absolute;left:0;right:0;bottom:0;z-index:56;
@@ -460,6 +486,7 @@ input:focus,select:focus{outline:2px solid var(--o1);outline-offset:1px}
   </section>
 
   <div class="flash" id="flash"></div>
+  <div class="answer" id="answer"></div>
   <div class="boom toon o" id="boom">บู้ม!</div>
   <canvas id="fx"></canvas>
 </div>
@@ -506,7 +533,7 @@ function buddySVG(){
 
 /* ============ บทพูดของน้องเหรียญ ============ */
 var LINES = {
-  idle:  ["มาเปิดป้ายกับน้องเหรียญมั้ย","วันนี้ใครจะได้เหรียญกลับบ้านนะ","แตะได้เลย ไม่ต้องเกรงใจ"],
+  idle:  ["มาเปิดป้ายกับน้องเหรียญมั้ย","วันนี้ใครจะได้ของรางวัลกลับบ้านนะ","แตะได้เลย ไม่ต้องเกรงใจ"],
   start: ["เลือกช่องแรกเลย!","ช่องไหนดีน้า","เอาช่องมุมมั้ย"],
   good:  ["ได้แล้ว! เอาอีกมั้ย","เก่งมาก!","ยังไหวอยู่นะ","มือขึ้นนี่หว่า"],
   risky: ["เสี่ยงแล้วนะ...","จะเปิดต่อจริงเหรอ","น้องเหรียญเริ่มใจสั่นละ","พอดีมั้ย พอดีมั้ย"],
@@ -747,7 +774,7 @@ function renderGrid(){
     b.setAttribute("aria-label","ป้ายที่ "+(i+1));
     b.innerHTML='<div class="inner">' +
       '<div class="face front" style="--d:'+(i*0.27).toFixed(2)+'s"><span>?</span></div>' +
-      '<div class="face back">'+tileBack(t)+'</div></div>';
+      '<div class="face back">'+tileBack(t)+'</div></div><span class="ring"></span>';
     b.addEventListener("click", function(){ openTile(i); });
     g.appendChild(b);
   });
@@ -774,6 +801,7 @@ function newRound(){
   renderGrid(); renderPurse(); renderTickets();
   $("stopBtn").disabled=true;
   $("endsheet").className="endsheet";
+  $("answer").classList.remove("on"); clearTimeout(sheetTimer);
   $("reveal").classList.remove("on");
   parts.length=0; ctx.clearRect(0,0,cv.width,cv.height);
   mood($("buddyG"),"watch"); say($("bubbleG"),"start");
@@ -844,11 +872,13 @@ function blowUp(t,el){
 
 function endRound(safe, note){
   phase="ended";
-  revealAll();
+  clearTimeout(sheetTimer);
+  var missed = revealAll();          /* คืนจำนวนเหรียญที่ยังไม่ได้เปิด */
+  showAnswer(missed);
   sessionCoins += coins;
   var last = (playNo >= cfg.rights);
   var sheet=$("endsheet");
-  sheet.className="endsheet on";
+  sheet.className="endsheet";   /* คลาส on ใส่ทีหลังใน showAnswer */
   if(safe){
     $("endTitle").textContent = coins ? "เก็บเหรียญเรียบร้อย" : "จบสิทธิ์นี้";
     $("endSub").textContent = note || "รับเหรียญที่เคาน์เตอร์ได้เลย";
@@ -875,14 +905,40 @@ function endRound(safe, note){
   resetIdle();
 }
 
+/* เปิดป้ายที่เหลือทั้งหมด เหรียญเปิดก่อนพร้อมวงแหวนชี้ ระเบิดตามทีหลัง
+   คืนค่าจำนวนช่องเหรียญที่ผู้เล่นพลาดไป                                  */
 function revealAll(){
-  var els=$("grid").querySelectorAll(".tile"), d=0;
-  for(var i=0;i<els.length;i++){
-    if(els[i].classList.contains("flip")) continue;
-    (function(el,t,delay){
-      setTimeout(function(){ el.setAttribute("data-type",t.type); el.classList.add("flip","spent"); }, delay);
-    })(els[i], tiles[i], (d++)*55);
-  }
+  var grid=$("grid"), missed=0, order=[];
+  tiles.forEach(function(t,i){
+    var el=grid.querySelector('[data-i="'+i+'"]');
+    if(!el || el.classList.contains("flip")) return;
+    if(t.type==="coin"){ missed++; order.push({el:el,t:t,pri:0}); }
+    else order.push({el:el,t:t,pri:1});
+  });
+  order.sort(function(a,b){ return a.pri-b.pri; });
+  order.forEach(function(o,k){
+    setTimeout(function(){
+      o.el.setAttribute("data-type",o.t.type);
+      o.el.classList.add("flip","spent");
+      if(o.t.type==="coin"){ o.el.classList.add("point"); tone(1046+k*80,0.12,"triangle",0.14); }
+    }, k*180);
+  });
+  return missed;
+}
+
+/* ป้ายเฉลย ขึ้นระหว่างป้ายกำลังพลิก แล้วแผงสรุปค่อยตามมา */
+var sheetTimer=null;
+function showAnswer(missed){
+  var a=$("answer");
+  a.textContent = missed
+    ? "เหรียญที่เหลืออยู่ตรงนี้ " + missed + " ช่อง"
+    : "เปิดเจอเหรียญครบทุกช่องแล้ว";
+  a.classList.add("on");
+  var wait = Math.min(2600, 900 + missed*420);
+  sheetTimer = setTimeout(function(){
+    a.classList.remove("on");
+    $("endsheet").classList.add("on");
+  }, wait);
 }
 function renderPurse(){
   var n=$("coinTotal");
@@ -901,6 +957,7 @@ function resetIdle(){
 function toAttract(){
   clearTimeout(idleTimer);
   phase="attract"; playNo=1; sessionCoins=0;
+  clearTimeout(sheetTimer); $("answer").classList.remove("on");
   $("endsheet").className="endsheet";
   $("reveal").classList.remove("on");
   parts.length=0; ctx.clearRect(0,0,cv.width,cv.height);
