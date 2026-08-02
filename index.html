@@ -243,9 +243,14 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .tile .inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .5s var(--bounce)}
 .tile:not(.flip):active .inner{transform:translateY(var(--lift)) scale(.97)}
 .tile.flip .inner{transform:rotateY(180deg)}
+/* กันพลาด ถ้าเบราว์เซอร์ไหนไม่รองรับ backface-visibility ก็ยังถูกต้อง */
+.tile .front{visibility:visible;transition:visibility 0s linear .26s}
+.tile .back {visibility:hidden; transition:visibility 0s linear .26s}
+.tile.flip .front{visibility:hidden}
+.tile.flip .back {visibility:visible}
 .face{position:absolute;inset:0;border-radius:calc(var(--u)*3.4);border:var(--bw) solid var(--ink);
-  backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center;overflow:hidden}
-.front{background:linear-gradient(180deg,var(--o2) 0%,var(--o1) 45%,var(--o3) 100%);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center}
+.front{overflow:hidden;background:linear-gradient(180deg,var(--o2) 0%,var(--o1) 45%,var(--o3) 100%);
   box-shadow:inset 0 calc(var(--u)*1.4) 0 rgba(255,255,255,.5), inset 0 calc(var(--u)*-1.4) 0 rgba(0,0,0,.16)}
 .front span{font-family:var(--f-display);font-weight:700;font-size:calc(var(--u)*9);color:var(--white);
   text-shadow:0 calc(var(--u)*.7) 0 var(--o4), calc(var(--u)*.38) 0 0 var(--ink), calc(var(--u)*-.38) 0 0 var(--ink)}
@@ -259,7 +264,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .back .ic img,.back .ic svg{width:100%;height:auto;display:block}
 .back .cap{font-family:var(--f-display);font-weight:500;font-size:calc(var(--u)*3);color:var(--o3);margin-top:calc(var(--u)*.4)}
 .tile[data-type="bomb"] .back{background:linear-gradient(180deg,#FFE0D0,#FFC7A8)}
-.tile.spent .inner{filter:saturate(.6) brightness(.94)}
+/* filter ต้องอยู่ที่ .face เท่านั้น ถ้าใส่ที่ .inner จะทำลาย preserve-3d
+   แล้วป้ายจะโชว์หน้า ? กลับด้านแทนที่จะเป็นหลังป้าย */
+.tile.spent .face{filter:saturate(.6) brightness(.94)}
 
 /* ---------- กระเป๋าเหรียญ ---------- */
 .purse{
